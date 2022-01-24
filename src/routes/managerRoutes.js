@@ -1,7 +1,7 @@
 import { Router } from "express"
-import { hashPassword, checkPassword, generatePassword, sendEmail } from "../helpers" ;
+import {  checkPassword, generatePassword,generateToken, sendEmail } from "../helpers" ;
 import {isAdmin} from "../middlewares"
-import { Manager} from '../models'
+import { managerModel} from '../models'
 
 const router = Router();
 
@@ -11,26 +11,60 @@ router.get('/',(req, res, next) => {
     })
 })
 
-router.post('/create',isAdmin,(req, res, next) =>{
-    const password =  generatePassword();
-    const { email} = req.body
-    const manager = new Manager({
-        
+router.post('/create',isAdmin,async(req, res, next) =>{
+    const password = await generatePassword();
+    const { name,email} = req.body
+    const manager = new managerModel({
+        name,
         email ,
-        password :  hashPassword(password),
+        password :  password,
 
     });
     manager.save().then(result =>{
         console.log(result);
     //Send Email 
-    sendEmail(email, password);
+    // sendEmail(email, password);
     })
-    .catch(err =>{log.error(err)});
+    .catch(err =>{console.log(err)});
 
     res.status(201).json({ 
         message : 'Handling Post requests to /manager',
         createdManager : manager
     })
+})
+
+router.post('/Auth',async (req, res, next) =>{
+    const { email, password } = req.body
+
+   const manager = await  managerModel.findOne({ email}).lean()
+    
+   if (manager) {
+    // manager.comparePassword(password,function(err,isMatch) {
+    //        if(err)throw err;
+    //        const token = generateToken(manager, process.env.JWT_MANAGER_SECRET, "manager")
+    //     res.json({
+    //         data: manager,
+    //         token
+    //     })
+
+    //    })
+    const isValid = await checkPassword(password, manager.password)
+    if (isValid) {
+        const token = generateToken(manager, process.env.JWT_MANAGER_SECRET, "manager")
+        res.json({
+            data: manager,
+            token
+        })
+    } else {
+        res.json({
+            message: "Invalid password"
+        })
+    }
+} else {
+    res.json({
+        message: "Invalid email"
+    })
+}
 })
 
 export { router as manager }

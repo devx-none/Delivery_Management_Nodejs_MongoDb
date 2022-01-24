@@ -1,6 +1,6 @@
 import { Router } from "express"
 import { hashPassword, checkPassword, generatePassword,generateToken, sendEmail } from "../helpers" ;
-import { adminModule } from '../models'
+import { adminModel } from '../models'
 
 const router = Router();
 
@@ -12,10 +12,10 @@ router.get('/',(req, res, next) => {
 
 router.post('/create',(req, res, next) =>{
     const { email, password } = req.body
-    const admin = new adminModule({
+    const admin = new adminModel({
         
         email ,
-        password :  hashPassword(password),
+        password :  password,
 
     });
     admin.save().then(result =>{
@@ -32,9 +32,18 @@ router.post('/create',(req, res, next) =>{
 router.post('/login',async (req, res, next) =>{
     const { email, password } = req.body
 
-   const admin = await  adminModule.findOne({ email}).lean()
+   const admin = await  adminModel.findOne({ email}).lean()
     
    if (admin) {
+    // admin.comparePassword(password,function(err,isMatch) {
+    //        if(err)throw err;
+    //        const token = generateToken(admin, process.env.JWT_ADMIN_SECRET, "admin")
+    //     res.json({
+    //         data: admin,
+    //         token
+    //     })
+
+    //    })
     const isValid = await checkPassword(password, admin.password)
     if (isValid) {
         const token = generateToken(admin, process.env.JWT_ADMIN_SECRET, "admin")

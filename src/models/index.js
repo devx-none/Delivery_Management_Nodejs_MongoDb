@@ -1,2 +1,5 @@
-export { adminModule } from './admin'
-export { Manager } from './manager'
+export { adminModel } from './admin'
+export { deliveryModel} from './delivery'
+export { managerModel } from './manager'
+export { deliveryManagerModel} from './deliveryManager'
+export { driverModel } from './driver'
