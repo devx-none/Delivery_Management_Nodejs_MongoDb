@@ -23,7 +23,7 @@ router.post('/create',isAdmin,async(req, res, next) =>{
     manager.save().then(result =>{
         console.log(result);
     //Send Email 
-    // sendEmail(email, password);
+    sendEmail(email, password);
     })
     .catch(err =>{console.log(err)});
 

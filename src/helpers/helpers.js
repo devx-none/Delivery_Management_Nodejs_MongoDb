@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt"
 import fetch from 'cross-fetch';
-
+import nodemailer from 'nodemailer';
 
 //password helpers
 
@@ -51,8 +51,8 @@ export const distance = async (req,res) => {
             if (data.status >= 400) {
                 throw new Error("Bad response from server");
               }
-              const distanceData =await  data.json();
-              
+              const distanceData = await  data.json();
+
               return distanceData.distance
             
         } 
@@ -79,8 +79,33 @@ export const calculatePrice = async (req, res) => {
                  price = req.body.price;
             }
             
+        }else if(req.body.type === 'international'){
+            
+            //api for get data country ( region and currency)
+            const data = await fetch(`https://restcountries.com/v3.1/name/${req.body.to}`)
+            if (data.status >= 400) {
+                throw new Error("Bad response from server");
+              }
+              const dataCountry = await data.json();
+              console.log(dataCountry[0].region);
+
+              // list Regions and price by 1kg
+              let regions ={
+                  Europe : 160,
+                  Americas : 220,
+                  Asie : 240 ,
+                  Australie : 260
+
+              }
+              console.log(regions[dataCountry[0].region]);
+              console.log(Object.keys(dataCountry[0].currencies)[0]);
+              const currencies = await fetch(`https://freecurrencyapi.net/api/v2/latest?apikey=f4e03410-7938-11ec-a7b9-05b180f723c9&base_currency=MAD `)
+              const currency = await currencies.json();
+             
+                req.body.price =( req.body.weight * regions[dataCountry[0].region] ) * currency.data[ Object.keys(dataCountry[0].currencies)[0]]  ;
+                price = req.body.price;
+          
         }
-        console.log(price);
         return price;
     }
     catch (error) {
@@ -88,6 +113,8 @@ export const calculatePrice = async (req, res) => {
         
     }
 }
+
+// send email for new account
 export const sendEmail = async (email, password) => {
 
     let transporter = nodemailer.createTransport({
@@ -112,5 +139,30 @@ export const sendEmail = async (email, password) => {
 
     console.log("Preview URL: %s", info);
 
+
+}
+
+export const EmailConfirmation = async (email,delivery,driver)=>{
+    let transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        service:"Gmail",
+        auth:{
+            user:process.env.EMAIL,
+            pass:process.env.PASS
+        }
+    });
+
+    let info = await transporter.sendMail({
+        from: `Welcome <info.MarocShip@gmail.com>`,
+        to: email,
+        subject :"Email confirmation",
+        html: `Press <a href=http://localhost:3000/delivery/reserved/${delivery}/${driver}>here </a> to confirm delivery .Thanks`,
+    });
+
+    console.log("Preview URL: %s", info);
+
+   
 
 }

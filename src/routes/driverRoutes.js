@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { hashPassword, checkPassword, generatePassword,generateToken, sendEmail } from "../helpers" ;
 import {isManager} from "../middlewares"
-import { driverModel} from '../models'
+import { driverModel ,deliveryModel} from '../models'
 
 const router = Router();
 
@@ -24,7 +24,7 @@ router.post('/create',isManager,async(req, res, next) =>{
     driver.save().then(result =>{
         console.log(result);
     //Send Email 
-    // sendEmail(email, password);
+    sendEmail(email, password);
     })
     .catch(err =>{console.log(err)});
 
@@ -66,6 +66,16 @@ router.post('/Auth',async (req, res, next) =>{
         message: "Invalid email"
     })
 }
+})
+
+router.get('/bonus',async(req, res, next) => {
+    var query = deliveryModel.find({ 
+        "createdAt": { 
+            "$gte": new Date("2020-01-01"), "$lte": new Date("2020-01-29")
+        }
+    }).count()
+    
+    query.exec()
 })
 
 export { router as driver }
