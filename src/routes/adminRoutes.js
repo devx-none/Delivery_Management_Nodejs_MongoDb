@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { hashPassword, checkPassword, generatePassword,generateToken, sendEmail } from "../helpers" ;
 import { adminModel } from '../models'
-
+import adminController from '../controllers/adminController.js'
 const router = Router();
 
 router.get('/',(req, res, next) => {
@@ -10,57 +10,8 @@ router.get('/',(req, res, next) => {
     })
 })
 
-router.post('/create',(req, res, next) =>{
-    const { email, password } = req.body
-    const admin = new adminModel({
-        
-        email ,
-        password :  password,
+router.post('/create',adminController.create)
 
-    });
-    admin.save().then(result =>{
-        console.log(result);
-    })
-    .catch(err =>{log.error(err)});
-
-    res.status(201).json({ 
-        message : 'Handling Post requests to /admin',
-        createdAdmin : admin
-    })
-})
-
-router.post('/login',async (req, res, next) =>{
-    const { email, password } = req.body
-
-   const admin = await  adminModel.findOne({ email}).lean()
-    
-   if (admin) {
-    // admin.comparePassword(password,function(err,isMatch) {
-    //        if(err)throw err;
-    //        const token = generateToken(admin, process.env.JWT_ADMIN_SECRET, "admin")
-    //     res.json({
-    //         data: admin,
-    //         token
-    //     })
-
-    //    })
-    const isValid = await checkPassword(password, admin.password)
-    if (isValid) {
-        const token = generateToken(admin, process.env.JWT_ADMIN_SECRET, "admin")
-        res.json({
-            data: admin,
-            token
-        })
-    } else {
-        res.json({
-            message: "Invalid password"
-        })
-    }
-} else {
-    res.json({
-        message: "Invalid email"
-    })
-}
-})
+router.post('/login',adminController.login)
 
 export { router as admin }
